@@ -7,7 +7,7 @@ fi
 
 if [[ ! -e /var/secure/user_passwords.txt ]]; then
 
-    sudo touch /var/secure/user_passwords.log
+    sudo touch /var/secure/user_passwords.txt
 fi
 
 log_file="/var/log/user_management.log"
@@ -56,8 +56,15 @@ if [[ -f "$file_path" ]]; then
 			
 			echo "Home directory for $user set up with appropriate permissions and ownership" >> $log_file
 
-			echo "$user_name,$password" >> "$password_file"
+			echo "$user_name,$password" >> "$pass_file"
 		fi
-
 	done < "$file_path"
+	sudo chmod 600 "$password_file"
+    	sudo chown "$(id -u):$(id -g)" "$password_file"
+    	echo "File permissions for $password_file set to owner-only read" >> $log_file
+else
+	echo "File not found: $file_path"
+	echo "File not found: $file_path" >> "$log_file"
+	exit 1
+
 fi

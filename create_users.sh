@@ -1,17 +1,17 @@
 #!/bin/bash
 
 if [[ ! -e /var/log/user_management.log ]]; then
-
-    sudo touch /var/log/user_management.log
+	sudo mkdir -p /var/log/
+	sudo touch /var/log/user_management.log
 fi
 
 if [[ ! -e /var/secure/user_passwords.txt ]]; then
-
-    sudo touch /var/secure/user_passwords.txt
+	sudo mkdir -p /var/secure/
+	sudo touch /var/secure/user_passwords.txt
 fi
 
 log_file="/var/log/user_management.log"
-pass_file="/var/secure/user_passwords.log"
+pass_file="/var/secure/user_passwords.txt"
 
 echo "logfile created..." >> $log_file
 echo "checking if text_file exists" >> $log_file
@@ -28,8 +28,8 @@ file_path="$1"
 if [[ -f "$file_path" ]]; then
 	echo "fetching the usernames and groups" >> $log_file
 	while IFS= read -r lines; do
-		user_name=$(echo "$lines" | awk -F';' '{print $1}') #explain in the post
-		groups=$(echo "$lines" | awk -F';' '{print $2}')
+		user_name=$(echo "$lines" | awk -F'; ' '{print $1}') #explain in the post
+		groups=$(echo "$lines" | awk -F'; ' '{print $2}')
 
 		if id -u "$user_name">/dev/null 2>&1; then #explain in the post
 			echo "user $user_name already exists"
@@ -50,9 +50,10 @@ if [[ -f "$file_path" ]]; then
 
 			sudo useradd -m -G "$groups" -p "$(openssl passwd -1 "$password")" "$user_name" #explain in post
 			echo "adding groups :$groups for user: $user_name and password in $pass_file " >> $log_file
+			group_fold="/home/$user_name"
 			
-			sudo chmod 700 "/home/$user_name"
-			sudo chown "$user_name:$user_name" "/home/$user_name"
+			sudo chmod 700 $group_fold > $log_file 2>&1
+			sudo chown $user_name:$user_name $group_fold > $log_file 2>&1
 			
 			echo "Home directory for $user set up with appropriate permissions and ownership" >> $log_file
 
@@ -63,7 +64,6 @@ if [[ -f "$file_path" ]]; then
     	sudo chown "$(id -u):$(id -g)" "$password_file"
     	echo "File permissions for $password_file set to owner-only read" >> $log_file
 else
-	echo "File not found: $file_path"
 	echo "File not found: $file_path" >> "$log_file"
 	exit 1
 
